@@ -14,6 +14,8 @@ public class NeuralNetworkCarrier : MonoBehaviour
     public LossFunction loss;
     private NDArray predictions;
     private NDArray accuracy;
+    public OptimizerStruct optimizerStruct;
+    public int epochs;
 
     public void GenerateNeuralNetwork()
     {
@@ -33,16 +35,28 @@ public class NeuralNetworkCarrier : MonoBehaviour
     public void Forward()
     {
         forward_output = network.Forward(test_values);
+
+        Debug.Log("forward_output: " + forward_output.ToString());
+
         predictions = np.argmax(forward_output, 1);
-        accuracy = np.mean((accuracy == predictions).astype(typeof(double)));
+        accuracy = np.mean((test_y == predictions).astype(typeof(double)));
 
         Debug.Log("accuracy: " + accuracy.ToString());
     }
 
     public void Loss()
     {
-        //loss_output = network.CalculateLoss(test_y, forward_output, loss);
         Debug.Log("loss: " + network.CalculateLoss(test_y, forward_output, loss));
+    }
+
+    public void Optimize()
+    {
+        network.Optimize(optimizerStruct.optimizer, optimizerStruct.learningRate);
+    }
+
+    public void Train()
+    {
+        network.Train(test_values, test_y, epochs, optimizerStruct.learningRate, loss);
     }
 }
 
@@ -52,5 +66,15 @@ public struct LayerStruct
     public Vector2Int inputShape;
     public Vector2Int outputShape;
     public ActivationFunction activationFunction;
-    public DenseLayer.Initializer initializer;
+    public Initializer initializer;
+}
+
+[System.Serializable]
+public struct OptimizerStruct
+{
+    public OptimizerFunction optimizer;
+    public float learningRate;
+    public float momentum;
+    public float decay;
+    public float nesterov;
 }
